@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  LEARNER
+  TUTOR
+  ADMIN
+}
+
+model TutorCategory {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  slug  String  @unique
+  tutors Tutor[]
+
+  @@index([slug])
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  fullName     String
+  email        String    @unique
+  passwordHash String?
+  googleId     String?   @unique
+  phone        String?
+  userType     UserType  @default(LEARNER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  tutor        Tutor?
+  learner      Learner?
+}
+
+model Tutor {
+  id               Int                @id @default(autoincrement())
+  userId           Int                @unique
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId       Int?
+  category         TutorCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  about            String?
+  bio              String?
+  costPer30Min     Decimal            @db.Decimal(10, 2)
+  profileImage     String?
+  certificate      String?
+  rating           Decimal?           @db.Decimal(3, 2)
+  isApproved       Boolean            @default(false)
+  rejectionReason  String?            @db.Text
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  workExperiences  WorkExperience[]
+  slots            Slot[]
+  bookings         Booking[]
+  reviews          Review[]
+
+  @@index([categoryId])
+}
+
+model Slot {
+  id        Int       @id @default(autoincrement())
+  tutorId   Int
+  tutor     Tutor     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  date      DateTime  @db.Date   // specific date when this slot is available
+  startTime String    // "HH:mm" e.g. "09:00"
+  endTime   String    // "HH:mm" e.g. "10:00"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
+
+  @@unique([tutorId, date, startTime])
+  @@index([tutorId])
+  @@index([date])
+}
+
+model WorkExperience {
+  id          Int     @id @default(autoincrement())
+  tutorId     Int
+  tutor       Tutor   @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  companyName String
+  role        String?
+  yearsWorked Int?
+  createdAt   DateTime @default(now())
+}
+
+model Learner {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
+  reviews   Review[]
+}
+
+model Booking {
+  id              Int      @id @default(autoincrement())
+  tutorId         Int
+  learnerId       Int
+  slotId          Int
+  date            DateTime @db.Date
+  amountPaid      Decimal  @db.Decimal(10, 2)
+  platformFee     Decimal  @default(0) @db.Decimal(10, 2)
+  tutorEarning    Decimal  @default(0) @db.Decimal(10, 2)
+  stripeSessionId String?  @unique
+  meetLink        String?
+  paymentStatus   String   @default("paid")
+  paidAt          DateTime @default(now())
+  createdAt       DateTime @default(now())
+  tutor           Tutor    @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  learner         Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  slot            Slot     @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  @@unique([slotId])
+  @@index([tutorId])
+  @@index([learnerId])
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  tutorId    Int
+  learnerId  Int
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  tutor      Tutor    @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  learner    Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  @@unique([tutorId, learnerId])
+  @@index([tutorId])
+}
