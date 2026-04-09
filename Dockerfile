@@ -61,5 +61,5 @@ RUN mkdir -p uploads
 EXPOSE 3000
 
 # Run pending Prisma migrations then start the app.
-# To skip auto-migration, override CMD in docker-compose / k8s.
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+# Nest build output is under dist/src/main.js in this project.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
