@@ -7,7 +7,7 @@ on:
 env:
   API_IMAGE_NAME: booking-backend
   API_CONTAINER_NAME: booking-backend
-  API_PORT: 3000:3000
+  API_PORT: "3000:3000"
   REPO_NAME: ismoil-js/booking-backend
   REGISTRY: ghcr.io
 
@@ -53,6 +53,24 @@ jobs:
     steps:
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_SUCCESS_URL: ${{ secrets.STRIPE_SUCCESS_URL }}
+          STRIPE_CANCEL_URL: ${{ secrets.STRIPE_CANCEL_URL }}
+          PLATFORM_FEE_PERCENT: ${{ secrets.PLATFORM_FEE_PERCENT }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          MAIL_ENABLED: ${{ secrets.MAIL_ENABLED }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
@@ -71,24 +89,6 @@ jobs:
             MAIL_ENABLED,
             SMTP_HOST,SMTP_PORT,SMTP_SECURE,
             SMTP_USER,SMTP_PASS,MAIL_FROM
-          env:
-            GH_TOKEN: ${{ secrets.GH_TOKEN }}
-            GH_ACTOR: ${{ github.actor }}
-            DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-            JWT_SECRET: ${{ secrets.JWT_SECRET }}
-            GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-            STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-            STRIPE_SUCCESS_URL: ${{ secrets.STRIPE_SUCCESS_URL }}
-            STRIPE_CANCEL_URL: ${{ secrets.STRIPE_CANCEL_URL }}
-            PLATFORM_FEE_PERCENT: ${{ secrets.PLATFORM_FEE_PERCENT }}
-            GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-            MAIL_ENABLED: ${{ secrets.MAIL_ENABLED }}
-            SMTP_HOST: ${{ secrets.SMTP_HOST }}
-            SMTP_PORT: ${{ secrets.SMTP_PORT }}
-            SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
-            SMTP_USER: ${{ secrets.SMTP_USER }}
-            SMTP_PASS: ${{ secrets.SMTP_PASS }}
-            MAIL_FROM: ${{ secrets.MAIL_FROM }}
           script: |
             set -e
 
