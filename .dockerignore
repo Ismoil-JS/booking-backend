@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+
+# Compiled output (rebuilt inside Docker)
+dist
+
+# Local environment — never bake secrets into the image
+.env
+.env.*
+!.env.example
+
+# Uploads (mounted as a volume in production)
+uploads
+
+# Editor / OS
+.vscode
+.idea
+*.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test output
+coverage
