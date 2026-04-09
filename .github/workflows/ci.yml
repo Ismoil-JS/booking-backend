@@ -56,7 +56,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
@@ -78,7 +78,7 @@ jobs:
           # Pass all secrets as env vars so special characters don't break bash
           envs: >-
             GH_TOKEN,GH_ACTOR,
-            DB_PASSWORD,
+            DATABASE_URL,
             JWT_SECRET,
             GEMINI_API_KEY,
             STRIPE_SECRET_KEY,
@@ -93,11 +93,7 @@ jobs:
             set -e
 
             IMAGE="${{ env.REGISTRY }}/${{ env.REPO_NAME }}/${{ env.API_IMAGE_NAME }}:${{ github.sha }}"
-            NETWORK="booking-network"
-            DB_CONTAINER="booking-db"
             APP_CONTAINER="${{ env.API_CONTAINER_NAME }}"
-            DB_NAME="bisp"
-            DB_USER="postgres"
 
             # ── 1. Login to GHCR ──────────────────────────────────
             echo "==> Login to GHCR"
@@ -107,46 +103,22 @@ jobs:
             echo "==> Pull new image"
             docker pull "$IMAGE"
 
-            # ── 3. Create shared Docker network ───────────────────
-            echo "==> Create network"
-            docker network create "$NETWORK" || true
-
-            # ── 4. Start PostgreSQL (booking-db) if not running ───
-            echo "==> Start database container"
-            if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
-              docker volume create booking_db_data || true
-              docker run -d \
-                --name "$DB_CONTAINER" \
-                --network "$NETWORK" \
-                --restart unless-stopped \
-                -v booking_db_data:/var/lib/postgresql/data \
-                -e POSTGRES_DB="$DB_NAME" \
-                -e POSTGRES_USER="$DB_USER" \
-                -e POSTGRES_PASSWORD="$DB_PASSWORD" \
-                postgres:16-alpine
-              echo "==> Waiting for Postgres to be ready..."
-              sleep 5
-            else
-              echo "==> Database already running, skipping"
-            fi
-
-            # ── 5. Stop and remove old app container ──────────────
+            # ── 3. Stop and remove old app container ──────────────
             echo "==> Remove old app container"
             docker stop "$APP_CONTAINER" || true
             docker rm   "$APP_CONTAINER" || true
 
-            # ── 6. Create uploads volume ──────────────────────────
+            # ── 4. Create uploads volume ──────────────────────────
             docker volume create bisp_uploads || true
 
-            # ── 7. Run new app container ──────────────────────────
+            # ── 5. Run new app container ──────────────────────────
             echo "==> Run new container"
             docker run -d \
               --name "$APP_CONTAINER" \
-              --network "$NETWORK" \
               --restart unless-stopped \
               -p "${{ env.API_PORT }}" \
               -v bisp_uploads:/app/uploads \
-              -e DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_CONTAINER}:5432/${DB_NAME}" \
+              -e DATABASE_URL="$DATABASE_URL" \
               -e JWT_SECRET="$JWT_SECRET" \
               -e GEMINI_API_KEY="$GEMINI_API_KEY" \
               -e STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" \
@@ -163,7 +135,7 @@ jobs:
               -e MAIL_FROM="$MAIL_FROM" \
               "$IMAGE"
 
-            # ── 8. Cleanup old images ─────────────────────────────
+            # ── 6. Cleanup old images ─────────────────────────────
             echo "==> Cleanup old unused images"
             docker image prune -f
 
