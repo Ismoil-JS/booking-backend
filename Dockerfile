@@ -7,6 +7,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Prisma engines on Alpine need OpenSSL runtime libs available
+RUN apk add --no-cache openssl libc6-compat
+
 # Copy manifests first so layer cache is reused when source changes
 COPY package.json package-lock.json ./
 
@@ -32,6 +35,9 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
+
+# Prisma migrate/client also needs OpenSSL libs at runtime on Alpine
+RUN apk add --no-cache openssl libc6-compat
 
 # Copy package manifests and install production deps only
 COPY package.json package-lock.json ./
