@@ -6,6 +6,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { RealtimeChatModule } from './modules/realtime-chat/realtime-chat.module';
 import { TutorModule } from './modules/tutor/tutor.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaService } from './prisma/prisma.service';
@@ -19,6 +20,7 @@ import { PrismaService } from './prisma/prisma.service';
     AdminModule,
     BookingModule,
     ChatModule,
+    RealtimeChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
